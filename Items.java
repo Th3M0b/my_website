@@ -1,9 +1,9 @@
-public class Drink {
+public class Items {
     private final String name;
     private final double price;
     private int quantity;
 
-    public Drink(String name, double price, int quantity) {
+    public Items(String name, double price, int quantity) {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
