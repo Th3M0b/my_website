@@ -1,5 +1,5 @@
-//import java.util.ArrayList;
-//import java.util.List;
+package vendingmachine;
+
 
 public class VendingMachine {
     // Fields
@@ -36,14 +36,12 @@ public class VendingMachine {
     public void addBalance(double amount) {
         if (amount > 0) {
             balance += amount;
-            //System.out.println("New balance: $" + balance);
-        } else {
-            //System.out.println("Invalid amount. Cannot add negative or zero balance.");
+
         }
     }
 
     // Take back money (Overloaded method)
-    public double takeBackMoney() {
+    public final double takeBackMoney() {
         int refundedAmount = balance;
         balance = 0;
         //System.out.println("Money taken back: $" + refundedAmount);
