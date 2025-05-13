@@ -780,3 +780,110 @@ int main() {
 
     return 0;
 }
+
+
+
+Minute 0: Regular customer 1 arrived
+Minute 1: Regular customer 2 arrived
+Minute 2: Regular customer 3 arrived
+Minute 3: VIP customer 4 arrived
+Minute 4: VIP customer 5 arrived
+Minute 5: VIP customer 6 arrived
+Minute 6: Regular customer 7 arrived
+Minute 7: Regular customer 8 arrived
+Minute 8: Regular customer 9 arrived
+Minute 9: Regular customer 10 arrived
+Minute 10: VIP customer 11 arrived
+Minute 11: Regular customer 12 arrived
+Minute 12: VIP customer 13 arrived
+Minute 13: Regular customer 14 arrived
+Minute 14: VIP customer 15 arrived
+Minute 15: Regular customer 16 arrived
+Minute 16: Regular customer 17 arrived
+Minute 17: VIP customer 18 arrived
+Minute 18: VIP customer 19 arrived
+Minute 19: VIP customer 20 arrived
+Minute 20: Regular customer 21 arrived
+Minute 21: Regular customer 22 arrived
+Minute 22: Regular customer 23 arrived
+Minute 23: Regular customer 24 arrived
+Minute 24: Regular customer 25 arrived
+Minute 25: VIP customer 26 arrived
+Minute 26: Regular customer 27 arrived
+Minute 27: Regular customer 28 arrived
+Minute 28: Regular customer 29 arrived
+Minute 29: Regular customer 30 arrived
+Minute 30: Regular customer 31 arrived
+Minute 31: Regular customer 32 arrived
+Minute 32: Regular customer 33 arrived
+Minute 33: VIP customer 34 arrived
+Minute 34: Regular customer 35 arrived
+Minute 35: Regular customer 36 arrived
+Minute 36: Regular customer 37 arrived
+Minute 37: Regular customer 38 arrived
+Minute 38: Regular customer 39 arrived
+Minute 39: VIP customer 40 arrived
+Minute 40: Regular customer 41 arrived
+Minute 41: Regular customer 42 arrived
+Minute 42: Regular customer 43 arrived
+Minute 43: Regular customer 44 arrived
+Minute 44: Regular customer 45 arrived
+Minute 45: Regular customer 46 arrived
+Minute 46: Regular customer 47 arrived
+Minute 47: Regular customer 48 arrived
+Minute 48: Regular customer 49 arrived
+Minute 49: Regular customer 50 arrived
+
+Serving VIP customers:
+Serving VIP 4 (arrived at 3.00, needs 3.00 mins)
+Serving VIP 40 (arrived at 39.00, needs 3.00 mins)
+Serving VIP 34 (arrived at 33.00, needs 3.00 mins)
+Serving VIP 26 (arrived at 25.00, needs 3.00 mins)
+Serving VIP 20 (arrived at 19.00, needs 3.00 mins)
+Serving VIP 19 (arrived at 18.00, needs 3.00 mins)
+Serving VIP 18 (arrived at 17.00, needs 3.00 mins)
+Serving VIP 15 (arrived at 14.00, needs 3.00 mins)
+Serving VIP 13 (arrived at 12.00, needs 3.00 mins)
+Serving VIP 11 (arrived at 10.00, needs 3.00 mins)
+Serving VIP 6 (arrived at 5.00, needs 3.00 mins)
+Serving VIP 5 (arrived at 4.00, needs 3.00 mins)
+
+Serving Regular customers:
+Serving Regular 1 (arrived at 0.00, needs 5.00 mins)
+Serving Regular 2 (arrived at 1.00, needs 5.00 mins)
+Serving Regular 3 (arrived at 2.00, needs 5.00 mins)
+Serving Regular 7 (arrived at 6.00, needs 5.00 mins)
+Serving Regular 8 (arrived at 7.00, needs 5.00 mins)
+Serving Regular 9 (arrived at 8.00, needs 5.00 mins)
+Serving Regular 10 (arrived at 9.00, needs 5.00 mins)
+Serving Regular 12 (arrived at 11.00, needs 5.00 mins)
+Serving Regular 14 (arrived at 13.00, needs 5.00 mins)
+Serving Regular 16 (arrived at 15.00, needs 5.00 mins)
+Serving Regular 17 (arrived at 16.00, needs 5.00 mins)
+Serving Regular 21 (arrived at 20.00, needs 5.00 mins)
+Serving Regular 22 (arrived at 21.00, needs 5.00 mins)
+Serving Regular 23 (arrived at 22.00, needs 5.00 mins)
+Serving Regular 24 (arrived at 23.00, needs 5.00 mins)
+Serving Regular 25 (arrived at 24.00, needs 5.00 mins)
+Serving Regular 27 (arrived at 26.00, needs 5.00 mins)
+Serving Regular 28 (arrived at 27.00, needs 5.00 mins)
+Serving Regular 29 (arrived at 28.00, needs 5.00 mins)
+Serving Regular 30 (arrived at 29.00, needs 5.00 mins)
+Serving Regular 31 (arrived at 30.00, needs 5.00 mins)
+Serving Regular 32 (arrived at 31.00, needs 5.00 mins)
+Serving Regular 33 (arrived at 32.00, needs 5.00 mins)
+Serving Regular 35 (arrived at 34.00, needs 5.00 mins)
+Serving Regular 36 (arrived at 35.00, needs 5.00 mins)
+Serving Regular 37 (arrived at 36.00, needs 5.00 mins)
+Serving Regular 38 (arrived at 37.00, needs 5.00 mins)
+Serving Regular 39 (arrived at 38.00, needs 5.00 mins)
+Serving Regular 41 (arrived at 40.00, needs 5.00 mins)
+Serving Regular 42 (arrived at 41.00, needs 5.00 mins)
+Serving Regular 43 (arrived at 42.00, needs 5.00 mins)
+Serving Regular 44 (arrived at 43.00, needs 5.00 mins)
+Serving Regular 45 (arrived at 44.00, needs 5.00 mins)
+Serving Regular 46 (arrived at 45.00, needs 5.00 mins)
+Serving Regular 47 (arrived at 46.00, needs 5.00 mins)
+Serving Regular 48 (arrived at 47.00, needs 5.00 mins)
+Serving Regular 49 (arrived at 48.00, needs 5.00 mins)
+Serving Regular 50 (arrived at 49.00, needs 5.00 mins)
