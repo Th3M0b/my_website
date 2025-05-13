@@ -167,3 +167,234 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+-------------------------------------------
+#include "VIP_bank.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+#include <limits.h>
+
+#define SIMULATION_TIME 480  // 8 valandos minutėmis
+#define MAX_ITERATIONS 1000000
+
+double exponentialRandom(double mean) {
+    double u = (rand() + 1.0) / (RAND_MAX + 2.0);
+    return -mean * log(1 - u);
+}
+
+SimulationResults runSimulation(ProcessType process, SimulationParams params) {
+    srand((unsigned int)time(NULL) ^ (process << 16));
+    SimulationResults results = {0};
+    
+    if (process == PROCESS_1) {
+        PriorityQueue* queue = createPriorityQueue(1000);
+        double* clerk_busy_until = calloc(params.total_clerks, sizeof(double));
+        
+        double current_time = 0;
+        double next_arrival_time = 0;
+        int normal_clients_served = 0;
+        int vip_clients_served = 0;
+        double total_normal_wait = 0;
+        double max_vip_wait = 0;
+        int iterations = 0;
+
+        while (iterations < MAX_ITERATIONS) {
+            // Generate new client
+            if (next_arrival_time <= SIMULATION_TIME) {
+                double arrival_interval = exponentialRandom(2.0);
+                next_arrival_time += arrival_interval;
+
+                if (next_arrival_time <= SIMULATION_TIME) {
+                    if ((rand() / (RAND_MAX + 1.0)) < params.p_normal) {
+                        PriorityItem normal = {
+                            .id = iterations,
+                            .priority = 1,
+                            .arrival_time = next_arrival_time,
+                            .service_time = exponentialRandom(params.t_normal)
+                        };
+                        enqueuePriority(queue, normal);
+                    } else {
+                        PriorityItem vip = {
+                            .id = iterations,
+                            .priority = 0,
+                            .arrival_time = next_arrival_time,
+                            .service_time = exponentialRandom(params.t_vip)
+                        };
+                        enqueuePriority(queue, vip);
+                    }
+                }
+            }
+
+            double next_event_time = INFINITY;
+            for (int i = 0; i < params.total_clerks; i++) {
+                if (clerk_busy_until[i] < next_event_time) {
+                    next_event_time = clerk_busy_until[i];
+                }
+            }
+
+            if (!isPriorityQueueEmpty(queue)) {
+                PriorityItem peek = peekPriority(queue);
+                if (peek.arrival_time < next_event_time) {
+                    next_event_time = peek.arrival_time;
+                }
+            }
+
+            if (next_event_time == INFINITY) break;
+            current_time = next_event_time;
+
+            // Serve clients
+            for (int i = 0; i < params.total_clerks; i++) {
+                if (clerk_busy_until[i] <= current_time && !isPriorityQueueEmpty(queue)) {
+                    PriorityItem client = dequeuePriority(queue);
+                    double wait_time = current_time - client.arrival_time;
+
+                    if (client.priority == 0) {
+                        if (wait_time > max_vip_wait) max_vip_wait = wait_time;
+                        vip_clients_served++;
+                    } else {
+                        total_normal_wait += wait_time;
+                        normal_clients_served++;
+                    }
+
+                    clerk_busy_until[i] = current_time + client.service_time;
+
+                    if (current_time > SIMULATION_TIME) {
+                        results.total_overtime += client.service_time;
+                    }
+                }
+            }
+
+            if (next_arrival_time > SIMULATION_TIME && isPriorityQueueEmpty(queue)) {
+                break;
+            }
+
+            iterations++;
+        }
+
+        for (int i = 0; i < params.total_clerks; i++) {
+            results.total_downtime += fmax(0, SIMULATION_TIME - clerk_busy_until[i]);
+        }
+
+        if (normal_clients_served > 0) {
+            results.avg_normal_wait = total_normal_wait / normal_clients_served;
+        }
+        results.max_vip_wait = max_vip_wait;
+
+        free(clerk_busy_until);
+        freePriorityQueue(queue);
+    }
+    else {
+        Queue* normal_queue = createQueue(1000);
+        Queue* vip_queue = createQueue(1000);
+        double* normal_clerks = calloc(params.normal_clerks, sizeof(double));
+        double* vip_clerks = calloc(params.vip_clerks, sizeof(double));
+
+        double current_time = 0;
+        double next_arrival_time = 0;
+        int normal_served = 0;
+        double total_normal_wait = 0;
+        double max_vip_wait = 0;
+        int iterations = 0;
+
+        while (iterations < MAX_ITERATIONS) {
+            if (next_arrival_time <= SIMULATION_TIME) {
+                double arrival_interval = exponentialRandom(2.0);
+                next_arrival_time += arrival_interval;
+
+                if (next_arrival_time <= SIMULATION_TIME) {
+                    if ((rand() / (RAND_MAX + 1.0)) < params.p_normal) {
+                        QueueItem normal = {
+                            .id = iterations,
+                            .arrival_time = next_arrival_time,
+                            .service_time = exponentialRandom(params.t_normal)
+                        };
+                        enqueue(normal_queue, normal);
+                    } else {
+                        QueueItem vip = {
+                            .id = iterations,
+                            .arrival_time = next_arrival_time,
+                            .service_time = exponentialRandom(params.t_vip)
+                        };
+                        enqueue(vip_queue, vip);
+                    }
+                }
+            }
+
+            double next_event_time = INFINITY;
+            for (int i = 0; i < params.normal_clerks; i++) {
+                if (normal_clerks[i] < next_event_time) next_event_time = normal_clerks[i];
+            }
+            for (int i = 0; i < params.vip_clerks; i++) {
+                if (vip_clerks[i] < next_event_time) next_event_time = vip_clerks[i];
+            }
+
+            if (!isQueueEmpty(normal_queue)) {
+                QueueItem peek = peekQueue(normal_queue);
+                if (peek.arrival_time < next_event_time) next_event_time = peek.arrival_time;
+            }
+            if (!isQueueEmpty(vip_queue)) {
+                QueueItem peek = peekQueue(vip_queue);
+                if (peek.arrival_time < next_event_time) next_event_time = peek.arrival_time;
+            }
+
+            if (next_event_time == INFINITY) break;
+            current_time = next_event_time;
+
+            for (int i = 0; i < params.vip_clerks; i++) {
+                if (vip_clerks[i] <= current_time && !isQueueEmpty(vip_queue)) {
+                    QueueItem client = dequeue(vip_queue);
+                    double wait_time = current_time - client.arrival_time;
+
+                    if (wait_time > max_vip_wait) max_vip_wait = wait_time;
+                    vip_clerks[i] = current_time + client.service_time;
+
+                    if (current_time > SIMULATION_TIME) {
+                        results.total_overtime += client.service_time;
+                    }
+                }
+            }
+
+            for (int i = 0; i < params.normal_clerks; i++) {
+                if (normal_clerks[i] <= current_time && !isQueueEmpty(normal_queue)) {
+                    QueueItem client = dequeue(normal_queue);
+                    double wait_time = current_time - client.arrival_time;
+
+                    total_normal_wait += wait_time;
+                    normal_served++;
+                    normal_clerks[i] = current_time + client.service_time;
+
+                    if (current_time > SIMULATION_TIME) {
+                        results.total_overtime += client.service_time;
+                    }
+                }
+            }
+
+            if (next_arrival_time > SIMULATION_TIME &&
+                isQueueEmpty(normal_queue) && isQueueEmpty(vip_queue)) {
+                break;
+            }
+
+            iterations++;
+        }
+
+        for (int i = 0; i < params.normal_clerks; i++) {
+            results.total_downtime += fmax(0, SIMULATION_TIME - normal_clerks[i]);
+        }
+        for (int i = 0; i < params.vip_clerks; i++) {
+            results.total_downtime += fmax(0, SIMULATION_TIME - vip_clerks[i]);
+        }
+
+        if (normal_served > 0) {
+            results.avg_normal_wait = total_normal_wait / normal_served;
+        }
+        results.max_vip_wait = max_vip_wait;
+
+        free(normal_clerks);
+        free(vip_clerks);
+        freeQueue(normal_queue);
+        freeQueue(vip_queue);
+    }
+
+    return results;
+}
