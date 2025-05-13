@@ -118,53 +118,52 @@ int main(int argc, char* argv[]) {
     srand(seed);
     printf(">>> Seed set as: %u\n", seed);
 
-    // Process 1 simulation
-    printf("*** Launching P1 ***\n");
-    int served_regular1, served_vip1;
-    double idle_total1, overtime_sum1, avg_reg_wait1, max_vip_wait1;
-    double eval1 = Process1(prob_regular, prob_vip,
-                            num_cashiers_regular + num_cashiers_vip,
-                            avg_service_regular, avg_service_vip,
-                            workday_minutes,
-                            &served_regular1, &served_vip1, &idle_total1,
-                            &overtime_sum1, &avg_reg_wait1, &max_vip_wait1);
+    // Simulation 1 (PROCESS_1)
+    printf("*** Launching Process 1 Simulation ***\n");
+    SimulationParams params1 = {
+        num_cashiers_regular + num_cashiers_vip,
+        num_cashiers_regular,
+        num_cashiers_vip,
+        prob_regular,
+        avg_service_regular,
+        avg_service_vip
+    };
+
+    SimulationResults result1 = runSimulation(PROCESS_1, params1);
 
     printf("-- Process 1 Summary --\n");
-    printf("  Served regular >>> %d\n", served_regular1);
-    printf("  Served VIP >>> %d\n", served_vip1);
-    printf("  Idle total: %.2f mins\n", idle_total1);
-    printf("  Overtime sum: %.2f mins\n", overtime_sum1);
-    printf("  Avg reg wait: %.2f mins\n", avg_reg_wait1);
-    printf("  Max VIP wait: %.2f mins\n", max_vip_wait1);
-    printf("  Evaluation score >>> %.2f\n", eval1);
+    printf("  Total downtime: %.2f mins\n", result1.total_downtime);
+    printf("  Total overtime: %.2f mins\n", result1.total_overtime);
+    printf("  Avg normal wait: %.2f mins\n", result1.avg_normal_wait);
+    printf("  Max VIP wait: %.2f mins\n", result1.max_vip_wait);
 
-    // Process 2 simulation
-    printf("\nSimulating Process 2...\n");
-    int served_regular2, served_vip2;
-    double idle_total2, overtime_sum2, avg_reg_wait2, max_vip_wait2;
-    double eval2 = Process2(prob_regular, prob_vip,
-                            num_cashiers_regular, num_cashiers_vip,
-                            avg_service_regular, avg_service_vip,
-                            workday_minutes,
-                            &served_regular2, &served_vip2, &idle_total2,
-                            &overtime_sum2, &avg_reg_wait2, &max_vip_wait2);
+    // Simulation 2 (PROCESS_2)
+    printf("\n*** Launching Process 2 Simulation ***\n");
+    SimulationParams params2 = {
+        num_cashiers_regular + num_cashiers_vip,
+        num_cashiers_regular,
+        num_cashiers_vip,
+        prob_vip,
+        avg_service_regular,
+        avg_service_vip
+    };
+
+    SimulationResults result2 = runSimulation(PROCESS_2, params2);
 
     printf("-- Process 2 Summary --\n");
-    printf("  Served regular >>> %d\n", served_regular2);
-    printf("  Served VIP >>> %d\n", served_vip2);
-    printf("  Idle total: %.2f mins\n", idle_total2);
-    printf("  Overtime sum: %.2f mins\n", overtime_sum2);
-    printf("  Avg reg wait: %.2f mins\n", avg_reg_wait2);
-    printf("  Max VIP wait: %.2f mins\n", max_vip_wait2);
-    printf("  Evaluation score >>> %.2f\n", eval2);
+    printf("  Total downtime: %.2f mins\n", result2.total_downtime);
+    printf("  Total overtime: %.2f mins\n", result2.total_overtime);
+    printf("  Avg normal wait: %.2f mins\n", result2.avg_normal_wait);
+    printf("  Max VIP wait: %.2f mins\n", result2.max_vip_wait);
 
     // Comparison
     printf("\nComparison:\n");
-    if (eval1 < eval2) {
-        printf("Process 1 is more effective (score: %.2f)\n", eval1);
+    if (result1.total_overtime < result2.total_overtime) {
+        printf("Process 1 is more efficient (lower overtime)\n");
     } else {
-        printf("Process 2 is more effective (score: %.2f)\n", eval2);
+        printf("Process 2 is more efficient (lower overtime)\n");
     }
 
     return 0;
 }
+
