@@ -716,3 +716,67 @@ SimulationResults runSimulation(ProcessType process, SimulationParams params) {
 
     return results;
 }
+
+new main:
+#include "queue.h"
+#include "priorityQueue.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_CUSTOMERS 1000
+
+// Generate random double in range [0, 1)
+double randDouble() {
+    return rand() / (RAND_MAX + 1.0);
+}
+
+int main() {
+    srand((unsigned int)time(NULL));
+
+    int num_customers = 50;
+    double prob_vip = 30.0; // 30% chance a customer is VIP
+    double avg_service_regular = 5.0;
+    double avg_service_vip = 3.0;
+
+    Queue* regularQueue = createQueue(MAX_CUSTOMERS);
+    PriorityQueue* vipQueue = createPriorityQueue(MAX_CUSTOMERS);
+
+    int id_counter = 1;
+
+    for (int minute = 0; minute < 60; minute++) {
+        if (id_counter > num_customers) break;
+
+        double p = randDouble() * 100;
+        double arrival_time = minute;
+
+        if (p < prob_vip) {
+            // Add to VIP queue
+            PriorityItem vip = { .id = id_counter++, .priority = 0, .arrival_time = arrival_time, .service_time = avg_service_vip };
+            enqueuePriority(vipQueue, vip);
+            printf("Minute %d: VIP customer %d arrived\n", minute, vip.id);
+        } else {
+            // Add to regular queue
+            QueueItem regular = { .id = id_counter++, .arrival_time = arrival_time, .service_time = avg_service_regular };
+            enqueue(regularQueue, regular);
+            printf("Minute %d: Regular customer %d arrived\n", minute, regular.id);
+        }
+    }
+
+    printf("\nServing VIP customers:\n");
+    while (!isPriorityQueueEmpty(vipQueue)) {
+        PriorityItem vip = dequeuePriority(vipQueue);
+        printf("Serving VIP %d (arrived at %.2f, needs %.2f mins)\n", vip.id, vip.arrival_time, vip.service_time);
+    }
+
+    printf("\nServing Regular customers:\n");
+    while (!isQueueEmpty(regularQueue)) {
+        QueueItem reg = dequeue(regularQueue);
+        printf("Serving Regular %d (arrived at %.2f, needs %.2f mins)\n", reg.id, reg.arrival_time, reg.service_time);
+    }
+
+    freePriorityQueue(vipQueue);
+    freeQueue(regularQueue);
+
+    return 0;
+}
