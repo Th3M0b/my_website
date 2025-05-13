@@ -21,3 +21,150 @@ Simulating Process 2...
 
 Comparison:
 Process 1 is more effective (score: 1790.00)
+
+
+#include "VIP_bank.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+void ReadParamsFromFile(const char* filename, int* num_cashiers_regular, int* num_cashiers_vip,
+                        double* prob_regular, double* prob_vip,
+                        double* avg_service_regular, double* avg_service_vip,
+                        int* workday_minutes) {
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        printf("Error: Could not open file %s\n", filename);
+        exit(1);
+    }
+
+    char line[128];
+    fgets(line, sizeof(line), file); sscanf(line, "%d", workday_minutes);
+    fgets(line, sizeof(line), file); sscanf(line, "%d", num_cashiers_regular);
+    fgets(line, sizeof(line), file); sscanf(line, "%d", num_cashiers_vip);
+    fgets(line, sizeof(line), file); sscanf(line, "%lf", prob_regular);
+    fgets(line, sizeof(line), file); sscanf(line, "%lf", prob_vip);
+    fgets(line, sizeof(line), file); sscanf(line, "%lf", avg_service_regular);
+    fgets(line, sizeof(line), file); sscanf(line, "%lf", avg_service_vip);
+
+    fclose(file);
+}
+
+void inferCfgFromExe(char* exePath, char* outCfgPath, size_t maxLen) {
+    const char* filename = exePath;
+    for (const char* p = exePath; *p; ++p) {
+        if (*p == '\\' || *p == '/') {
+            filename = p + 1;
+        }
+    }
+
+    strncpy(outCfgPath, filename, maxLen - 1);
+    outCfgPath[maxLen - 1] = '\0';
+
+    char* dot = strrchr(outCfgPath, '.');
+    if (dot && strcmp(dot, ".exe") == 0) {
+        strcpy(dot, ".cfg");
+    } else {
+        strcat(outCfgPath, ".cfg");
+    }
+}
+
+int main(int argc, char* argv[]) {
+    int num_cashiers_regular = 0;
+    int num_cashiers_vip = 0;
+    double prob_regular = 0;
+    double prob_vip = 0;
+    double avg_service_regular = 0;
+    double avg_service_vip = 0;
+    int workday_minutes = 0;
+    unsigned int seed = (unsigned int)time(NULL);
+
+    int has_params = 0;
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-rnd") == 0 && i + 1 < argc) {
+            seed = (unsigned int)atoi(argv[++i]);
+        } else if (strstr(argv[i], ".txt") || strstr(argv[i], ".cfg")) {
+            ReadParamsFromFile(argv[i], &num_cashiers_regular, &num_cashiers_vip,
+                               &prob_regular, &prob_vip,
+                               &avg_service_regular, &avg_service_vip,
+                               &workday_minutes);
+            has_params = 1;
+        }
+    }
+
+    if (!has_params) {
+        char cfgName[FILENAME_MAX];
+        inferCfgFromExe(argv[0], cfgName, sizeof(cfgName));
+
+        printf("No parameter file provided, trying: %s\n", cfgName);
+        ReadParamsFromFile(cfgName, &num_cashiers_regular, &num_cashiers_vip,
+                           &prob_regular, &prob_vip,
+                           &avg_service_regular, &avg_service_vip,
+                           &workday_minutes);
+    }
+
+    if (prob_regular < 0 || prob_regular > 100 || prob_vip < 0 || prob_vip > 100) {
+        printf("Error: Probabilities must be between 0 and 100.\n");
+        exit(1);
+    }
+
+    if (num_cashiers_regular <= 0 || num_cashiers_vip <= 0) {
+        printf("Error: Number of cashiers must be greater than 0.\n");
+        exit(1);
+    }
+
+    srand(seed);
+    printf(">>> Seed set as: %u\n", seed);
+
+    // Process 1 simulation
+    printf("*** Launching P1 ***\n");
+    int served_regular1, served_vip1;
+    double idle_total1, overtime_sum1, avg_reg_wait1, max_vip_wait1;
+    double eval1 = Process1(prob_regular, prob_vip,
+                            num_cashiers_regular + num_cashiers_vip,
+                            avg_service_regular, avg_service_vip,
+                            workday_minutes,
+                            &served_regular1, &served_vip1, &idle_total1,
+                            &overtime_sum1, &avg_reg_wait1, &max_vip_wait1);
+
+    printf("-- Process 1 Summary --\n");
+    printf("  Served regular >>> %d\n", served_regular1);
+    printf("  Served VIP >>> %d\n", served_vip1);
+    printf("  Idle total: %.2f mins\n", idle_total1);
+    printf("  Overtime sum: %.2f mins\n", overtime_sum1);
+    printf("  Avg reg wait: %.2f mins\n", avg_reg_wait1);
+    printf("  Max VIP wait: %.2f mins\n", max_vip_wait1);
+    printf("  Evaluation score >>> %.2f\n", eval1);
+
+    // Process 2 simulation
+    printf("\nSimulating Process 2...\n");
+    int served_regular2, served_vip2;
+    double idle_total2, overtime_sum2, avg_reg_wait2, max_vip_wait2;
+    double eval2 = Process2(prob_regular, prob_vip,
+                            num_cashiers_regular, num_cashiers_vip,
+                            avg_service_regular, avg_service_vip,
+                            workday_minutes,
+                            &served_regular2, &served_vip2, &idle_total2,
+                            &overtime_sum2, &avg_reg_wait2, &max_vip_wait2);
+
+    printf("-- Process 2 Summary --\n");
+    printf("  Served regular >>> %d\n", served_regular2);
+    printf("  Served VIP >>> %d\n", served_vip2);
+    printf("  Idle total: %.2f mins\n", idle_total2);
+    printf("  Overtime sum: %.2f mins\n", overtime_sum2);
+    printf("  Avg reg wait: %.2f mins\n", avg_reg_wait2);
+    printf("  Max VIP wait: %.2f mins\n", max_vip_wait2);
+    printf("  Evaluation score >>> %.2f\n", eval2);
+
+    // Comparison
+    printf("\nComparison:\n");
+    if (eval1 < eval2) {
+        printf("Process 1 is more effective (score: %.2f)\n", eval1);
+    } else {
+        printf("Process 2 is more effective (score: %.2f)\n", eval2);
+    }
+
+    return 0;
+}
