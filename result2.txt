@@ -1,24 +1,49 @@
-No parameter file provided, trying: VIP_bank.cfg
->>> Seed set as: 1747124768
-*** Launching P1 ***
--- Process 1 Summary --
-  Served regular >>> 152
-  Served VIP >>> 96
-  Idle total: 1825.00 mins
-  Overtime sum: 0.00 mins
-  Avg reg wait: 0.02 mins
-  Max VIP wait: 0.00 mins
-  Evaluation score >>> 1825.06
+# VIP Banko Simuliacija
 
-Simulating Process 2...
--- Process 2 Summary --
-  Served regular >>> 146
-  Served VIP >>> 89
-  Idle total: 1884.00 mins
-  Overtime sum: 0.00 mins
-  Avg reg wait: 0.01 mins
-  Max VIP wait: 0.00 mins
-  Evaluation score >>> 1884.04
+Šis projektas simuliuoja banko klientų aptarnavimo sistemą, kurioje yra du klientų tipai: **įprasti** ir **VIP**. Simuliacija leidžia palyginti du skirtingus aptarnavimo modelius ir pateikia statistinius rezultatus.
 
-Comparison:
-Process 1 is more effective (score: 1825.06)
+## 🧠 Simuliacijos Režimai
+
+### 1. `PROCESS_1`: Bendroji prioriteto eilė
+- Visi darbuotojai aptarnauja iš **vienos prioritetinės eilės**.
+- VIP klientai turi aukštesnį prioritetą nei įprasti.
+
+### 2. `PROCESS_2`: Atskiros eilės
+- Darbuotojai yra suskirstyti:
+  - Vieni aptarnauja **įprastus** klientus.
+  - Kiti – **VIP** klientus.
+- Naudojamos dvi atskiros **FIFO** eilės.
+
+## ⚙️ Parametrai
+
+| Parametras        | Aprašymas                                           |
+|-------------------|-----------------------------------------------------|
+| `total_clerks`    | Viso darbuotojų (naudojama PROCESS_1)              |
+| `normal_clerks`   | Įprastų klientų darbuotojų skaičius (PROCESS_2)    |
+| `vip_clerks`      | VIP klientų darbuotojų skaičius (PROCESS_2)        |
+| `p_normal`        | Tikimybė, kad atėjęs klientas bus įprastas         |
+| `t_normal`        | Vidutinis įprasto kliento aptarnavimo laikas       |
+| `t_vip`           | Vidutinis VIP kliento aptarnavimo laikas           |
+
+## 📊 Rezultatai
+
+Grąžinami tokie rodikliai:
+
+- `total_downtime` – bendras darbuotojų nedarbo laikas
+- `total_overtime` – bendras viršvalandžių laikas
+- `avg_normal_wait` – vidutinis laukimo laikas įprastiems klientams
+- `max_vip_wait` – maksimalus laukimo laikas VIP klientui
+
+## 🧪 Paleidimas
+
+Projektas parašytas C kalba.
+
+1. Kompiliuokite su savo mėgstamu kompiliatoriumi (`gcc`, `clang`, ir pan.).
+2. Įsitikinkite, kad turite failus:
+   - `VIP_bank.h`
+   - `VIP_bank.c`
+   - `queue.h` / `queue.c`
+   - `priorityQueue.h` / `priorityQueue.c`
+3. Kviečiama funkcija:  
+   ```c
+   SimulationResults runSimulation(ProcessType process, SimulationParams params);
