@@ -1,0 +1,24 @@
+No parameter file provided, trying: VIP_bank.cfg
+>>> Seed set as: 1747124768
+*** Launching P1 ***
+-- Process 1 Summary --
+  Served regular >>> 152
+  Served VIP >>> 96
+  Idle total: 1825.00 mins
+  Overtime sum: 0.00 mins
+  Avg reg wait: 0.02 mins
+  Max VIP wait: 0.00 mins
+  Evaluation score >>> 1825.06
+
+Simulating Process 2...
+-- Process 2 Summary --
+  Served regular >>> 146
+  Served VIP >>> 89
+  Idle total: 1884.00 mins
+  Overtime sum: 0.00 mins
+  Avg reg wait: 0.01 mins
+  Max VIP wait: 0.00 mins
+  Evaluation score >>> 1884.04
+
+Comparison:
+Process 1 is more effective (score: 1825.06)

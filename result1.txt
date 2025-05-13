@@ -1,0 +1,23 @@
+>>> Seed set as: 50
+*** Launching P1 ***
+-- Process 1 Summary --
+  Served regular >>> 206
+  Served VIP >>> 61
+  Idle total: 1790.00 mins
+  Overtime sum: 0.00 mins
+  Avg reg wait: 0.00 mins
+  Max VIP wait: 0.00 mins
+  Evaluation score >>> 1790.00
+
+Simulating Process 2...
+-- Process 2 Summary --
+  Served regular >>> 204
+  Served VIP >>> 57
+  Idle total: 1816.00 mins
+  Overtime sum: 0.00 mins
+  Avg reg wait: 0.04 mins
+  Max VIP wait: 0.00 mins
+  Evaluation score >>> 1816.12
+
+Comparison:
+Process 1 is more effective (score: 1790.00)
