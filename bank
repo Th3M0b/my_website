@@ -1,0 +1,486 @@
+Go.cmd:
+@echo off
+if .%USERDOMAIN% == .SavasPC goto :P52s
+
+REM MIF kompiuteris
+path C:\PROGRA~2\Dev-Cpp\MinGW64\bin\;%path%
+mingw32-make.exe
+goto :toliau
+
+:savasPC
+make
+
+:toliau
+echo 500 modeliavimo laikas > params.txt
+echo 4   paprastų klientų kasininkų skaičius >> params.txt
+echo 2   VIP klientų kasininkų skaičius >> params.txt
+echo 40  paprasto kliento atėjimo tikimybė (%) >> params.txt
+echo 10  VIP kliento atėjimo tikimybė (%) >> params.txt
+echo 5   paprasto kliento aptarnavimo laikas >> params.txt
+echo 3   VIP kliento aptarnavimo laikas >> params.txt
+VIP_bank.exe params.txt -rnd 50 > result1.txt
+
+echo 485 modeliavimo laikas > VIP_bank.cfg
+echo 3 paprastų klientų kasininkų skaičius >> VIP_bank.cfg
+echo 3 VIP klientų kasininkų skaičius >> VIP_bank.cfg
+echo 30 paprasto kliento atėjimo tikimybė (%) >> VIP_bank.cfg
+echo 20 VIP kliento atėjimo tikimybė (%) >> VIP_bank.cfg
+echo 4 paprasto kliento aptarnavimo laikas >> VIP_bank.cfg
+echo 5 VIP kliento aptarnavimo laikas >> VIP_bank.cfg
+VIP_bank.exe > result2.txt
+
+Makefile:
+VIP_bank.exe: main.c VIP_bank.o queue.c priorityQueue.c
+		gcc -std=c99 -o VIP_bank.exe main.c VIP_bank.o queue.c priorityQueue.c
+
+VIP_bank.o: VIP_bank.c VIP_bank.h queue.h priorityQueue.h
+		gcc -std=c99 -c VIP_bank.c
+
+main.c:
+#include "VIP_bank.h"
+#include <stdio.h>
+
+int main() {
+    SimulationParams params = {
+        .total_clerks = 4,
+        .normal_clerks = 3,
+        .vip_clerks = 1,
+        .p_normal = 0.8,
+        .t_normal = 10.0,
+        .t_vip = 5.0
+    };
+
+    printf("Programa pradedama...\n");
+    
+    printf("Vykdomas Procesas 1...\n");
+    SimulationResults res1 = runSimulation(PROCESS_1, params);
+    
+    printf("Vykdomas Procesas 2...\n");
+    SimulationResults res2 = runSimulation(PROCESS_2, params);
+
+    printf("\nProcesas 1 rezultatai:\n");
+    printf("Prastovos laikas: %.2f min\n", res1.total_downtime);
+    printf("Viršvalandžiai: %.2f min\n", res1.total_overtime);
+    printf("Vid. normalus laukimas: %.2f min\n", res1.avg_normal_wait);
+    printf("Maks. VIP laukimas: %.2f min\n", res1.max_vip_wait);
+
+    printf("\nProcesas 2 rezultatai:\n");
+    printf("Prastovos laikas: %.2f min\n", res2.total_downtime);
+    printf("Viršvalandžiai: %.2f min\n", res2.total_overtime);
+    printf("Vid. normalus laukimas: %.2f min\n", res2.avg_normal_wait);
+    printf("Maks. VIP laukimas: %.2f min\n", res2.max_vip_wait);
+
+    return 0;
+}
+
+priorityQueue.c:
+#include "priorityQueue.h"
+#include <stdlib.h>
+
+PriorityQueue* createPriorityQueue(int capacity) {
+    PriorityQueue* q = (PriorityQueue*)malloc(sizeof(PriorityQueue));
+    q->items = (PriorityItem*)malloc(sizeof(PriorityItem) * capacity);
+    q->capacity = capacity;
+    q->size = 0;
+    return q;
+}
+
+void freePriorityQueue(PriorityQueue* q) {
+    free(q->items);
+    free(q);
+}
+
+static void swap(PriorityItem* a, PriorityItem* b) {
+    PriorityItem temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+static void heapifyUp(PriorityQueue* q, int index) {
+    while (index > 0) {
+        int parent = (index - 1) / 2;
+        if (q->items[index].priority >= q->items[parent].priority) break;
+        swap(&q->items[index], &q->items[parent]);
+        index = parent;
+    }
+}
+
+static void heapifyDown(PriorityQueue* q, int index) {
+    while (1) {
+        int left = 2 * index + 1;
+        int right = 2 * index + 2;
+        int smallest = index;
+
+        if (left < q->size && q->items[left].priority < q->items[smallest].priority)
+            smallest = left;
+        if (right < q->size && q->items[right].priority < q->items[smallest].priority)
+            smallest = right;
+        if (smallest == index) break;
+
+        swap(&q->items[index], &q->items[smallest]);
+        index = smallest;
+    }
+}
+
+bool enqueuePriority(PriorityQueue* q, PriorityItem item) {
+    if (q->size >= q->capacity) return false;
+    q->items[q->size] = item;
+    heapifyUp(q, q->size);
+    q->size++;
+    return true;
+}
+
+PriorityItem dequeuePriority(PriorityQueue* q) {
+    PriorityItem item = q->items[0];
+    q->size--;
+    q->items[0] = q->items[q->size];
+    heapifyDown(q, 0);
+    return item;
+}
+
+bool isPriorityQueueEmpty(PriorityQueue* q) {
+    return q->size == 0;
+}
+
+PriorityItem peekPriority(PriorityQueue* q) {
+    return q->items[0];
+}
+
+priorityQueue.h:
+#ifndef PRIORITY_QUEUE_H
+#define PRIORITY_QUEUE_H
+
+#include <stdbool.h>
+
+typedef struct {
+    int id;
+    int priority;  // 0 - aukščiausias prioritetas (VIP)
+    double arrival_time;
+    double service_time;
+} PriorityItem;
+
+typedef struct {
+    PriorityItem* items;
+    int capacity;
+    int size;
+} PriorityQueue;
+
+PriorityQueue* createPriorityQueue(int capacity);
+void freePriorityQueue(PriorityQueue* q);
+bool enqueuePriority(PriorityQueue* q, PriorityItem item);
+PriorityItem dequeuePriority(PriorityQueue* q);
+bool isPriorityQueueEmpty(PriorityQueue* q);
+PriorityItem peekPriority(PriorityQueue* q);
+
+#endif
+
+
+queue.c:
+#include "queue.h"
+#include <stdlib.h>
+
+Queue* createQueue(int capacity) {
+    Queue* q = (Queue*)malloc(sizeof(Queue));
+    q->items = (QueueItem*)malloc(sizeof(QueueItem) * capacity);
+    q->capacity = capacity;
+    q->front = 0;
+    q->rear = -1;
+    q->size = 0;
+    return q;
+}
+
+void freeQueue(Queue* q) {
+    free(q->items);
+    free(q);
+}
+
+bool enqueue(Queue* q, QueueItem item) {
+    if (q->size >= q->capacity) return false;
+    q->rear = (q->rear + 1) % q->capacity;
+    q->items[q->rear] = item;
+    q->size++;
+    return true;
+}
+
+QueueItem dequeue(Queue* q) {
+    QueueItem item = q->items[q->front];
+    q->front = (q->front + 1) % q->capacity;
+    q->size--;
+    return item;
+}
+
+bool isQueueEmpty(Queue* q) {
+    return q->size == 0;
+}
+
+QueueItem peek(Queue* q) {
+    return q->items[q->front];
+}
+
+queue.h:
+#ifndef QUEUE_H
+#define QUEUE_H
+
+#include <stdbool.h>
+
+typedef struct {
+    int id;
+    double arrival_time;
+    double service_time;
+} QueueItem;
+
+typedef struct {
+    QueueItem* items;
+    int capacity;
+    int front;
+    int rear;
+    int size;
+} Queue;
+
+Queue* createQueue(int capacity);
+void freeQueue(Queue* q);
+bool enqueue(Queue* q, QueueItem item);
+QueueItem dequeue(Queue* q);
+bool isQueueEmpty(Queue* q);
+QueueItem peek(Queue* q);
+
+#endif
+
+VIP_bank.c:
+#include "VIP_bank.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+#include <limits.h>
+
+#define SIMULATION_TIME 480  // 8 valandos minutėmis
+#define MAX_ITERATIONS 1000000
+
+double exponentialRandom(double mean) {
+    double u = (rand() + 1.0) / (RAND_MAX + 2.0);
+    return -mean * log(1 - u);
+}
+
+SimulationResults runSimulation(ProcessType process, SimulationParams params) {
+    srand((unsigned int)time(NULL) ^ (process << 16));
+    SimulationResults results = {0};
+    
+    if (process == PROCESS_1) {
+        PriorityQueue* queue = createPriorityQueue(1000);
+        double* clerk_busy_until = calloc(params.total_clerks, sizeof(double));
+        
+        double current_time = 0;
+        int normal_clients_served = 0;
+        int vip_clients_served = 0;
+        double total_normal_wait = 0;
+        double max_vip_wait = 0;
+        int iterations = 0;
+
+        while (iterations < MAX_ITERATIONS) {
+            iterations++;
+            
+            // Generuoti naujus klientus
+            if (current_time <= SIMULATION_TIME) {
+                double arrival_interval = exponentialRandom(2.0);
+                current_time += arrival_interval;
+                
+                if (current_time <= SIMULATION_TIME) {
+                    if ((rand() / (RAND_MAX + 1.0)) < params.p_normal) {
+                        PriorityItem normal = {
+                            .id = iterations,
+                            .priority = 1,
+                            .arrival_time = current_time,
+                            .service_time = exponentialRandom(params.t_normal)
+                        };
+                        enqueuePriority(queue, normal);
+                    } else {
+                        PriorityItem vip = {
+                            .id = iterations,
+                            .priority = 0,
+                            .arrival_time = current_time,
+                            .service_time = exponentialRandom(params.t_vip)
+                        };
+                        enqueuePriority(queue, vip);
+                    }
+                }
+            }
+            
+            // Aptarnauti klientus
+            for (int i = 0; i < params.total_clerks; i++) {
+                if (clerk_busy_until[i] <= current_time && !isPriorityQueueEmpty(queue)) {
+                    PriorityItem client = dequeuePriority(queue);
+                    double wait_time = current_time - client.arrival_time;
+                    
+                    if (client.priority == 0) { // VIP
+                        if (wait_time > max_vip_wait) max_vip_wait = wait_time;
+                        vip_clients_served++;
+                    } else { // Normalus
+                        total_normal_wait += wait_time;
+                        normal_clients_served++;
+                    }
+                    
+                    clerk_busy_until[i] = current_time + client.service_time;
+                    
+                    if (current_time > SIMULATION_TIME) {
+                        results.total_overtime += client.service_time;
+                    }
+                }
+            }
+            
+            // Išeiti jei darbo laikas baigėsi ir visi aptarnauti
+            if (current_time > SIMULATION_TIME && isPriorityQueueEmpty(queue)) {
+                break;
+            }
+        }
+        
+        // Skaičiuoti rezultatus
+        for (int i = 0; i < params.total_clerks; i++) {
+            results.total_downtime += fmax(0, SIMULATION_TIME - clerk_busy_until[i]);
+        }
+        
+        if (normal_clients_served > 0) {
+            results.avg_normal_wait = total_normal_wait / normal_clients_served;
+        }
+        results.max_vip_wait = max_vip_wait;
+        
+        free(clerk_busy_until);
+        freePriorityQueue(queue);
+    }
+    else {
+        // Proceso 2 implementacija (atskiros eilės)
+        Queue* normal_queue = createQueue(1000);
+        Queue* vip_queue = createQueue(1000);
+        double* normal_clerks = calloc(params.normal_clerks, sizeof(double));
+        double* vip_clerks = calloc(params.vip_clerks, sizeof(double));
+        
+        double current_time = 0;
+        int normal_served = 0;
+        double total_normal_wait = 0;
+        double max_vip_wait = 0;
+        int iterations = 0;
+
+        while (iterations < MAX_ITERATIONS) {
+            iterations++;
+            
+            // Generuoti naujus klientus
+            if (current_time <= SIMULATION_TIME) {
+                double arrival_interval = exponentialRandom(2.0);
+                current_time += arrival_interval;
+                
+                if (current_time <= SIMULATION_TIME) {
+                    if ((rand() / (RAND_MAX + 1.0)) < params.p_normal) {
+                        QueueItem normal = {
+                            .id = iterations,
+                            .arrival_time = current_time,
+                            .service_time = exponentialRandom(params.t_normal)
+                        };
+                        enqueue(normal_queue, normal);
+                    } else {
+                        QueueItem vip = {
+                            .id = iterations,
+                            .arrival_time = current_time,
+                            .service_time = exponentialRandom(params.t_vip)
+                        };
+                        enqueue(vip_queue, vip);
+                    }
+                }
+            }
+            
+            // Aptarnauti VIP klientus
+            for (int i = 0; i < params.vip_clerks; i++) {
+                if (vip_clerks[i] <= current_time && !isQueueEmpty(vip_queue)) {
+                    QueueItem client = dequeue(vip_queue);
+                    double wait_time = current_time - client.arrival_time;
+                    
+                    if (wait_time > max_vip_wait) max_vip_wait = wait_time;
+                    vip_clerks[i] = current_time + client.service_time;
+                    
+                    if (current_time > SIMULATION_TIME) {
+                        results.total_overtime += client.service_time;
+                    }
+                }
+            }
+            
+            // Aptarnauti normalius klientus
+            for (int i = 0; i < params.normal_clerks; i++) {
+                if (normal_clerks[i] <= current_time && !isQueueEmpty(normal_queue)) {
+                    QueueItem client = dequeue(normal_queue);
+                    double wait_time = current_time - client.arrival_time;
+                    
+                    total_normal_wait += wait_time;
+                    normal_served++;
+                    normal_clerks[i] = current_time + client.service_time;
+                    
+                    if (current_time > SIMULATION_TIME) {
+                        results.total_overtime += client.service_time;
+                    }
+                }
+            }
+            
+            // Išeiti jei darbo laikas baigėsi ir abi eilės tuščios
+            if (current_time > SIMULATION_TIME && isQueueEmpty(normal_queue) && isQueueEmpty(vip_queue)) {
+                break;
+            }
+        }
+        
+        // Skaičiuoti rezultatus
+        for (int i = 0; i < params.normal_clerks; i++) {
+            results.total_downtime += fmax(0, SIMULATION_TIME - normal_clerks[i]);
+        }
+        for (int i = 0; i < params.vip_clerks; i++) {
+            results.total_downtime += fmax(0, SIMULATION_TIME - vip_clerks[i]);
+        }
+        
+        if (normal_served > 0) {
+            results.avg_normal_wait = total_normal_wait / normal_served;
+        }
+        results.max_vip_wait = max_vip_wait;
+        
+        free(normal_clerks);
+        free(vip_clerks);
+        freeQueue(normal_queue);
+        freeQueue(vip_queue);
+    }
+    
+    return results;
+}
+
+VIP_bank.h:
+#ifndef VIP_BANK_H
+#define VIP_BANK_H
+
+#include "queue.h"
+#include "priorityQueue.h"
+
+typedef enum { NORMAL_CLIENT, VIP_CLIENT } ClientType;
+typedef enum { PROCESS_1, PROCESS_2 } ProcessType;
+
+typedef struct {
+    int id;
+    ClientType type;
+    double arrival_time;
+    double service_time;
+    double start_time;
+    double end_time;
+} Client;
+
+typedef struct {
+    int total_clerks;
+    int normal_clerks;
+    int vip_clerks;
+    double p_normal;
+    double t_normal;
+    double t_vip;
+} SimulationParams;
+
+typedef struct {
+    double total_downtime;
+    double total_overtime;
+    double avg_normal_wait;
+    double max_vip_wait;
+} SimulationResults;
+
+SimulationResults runSimulation(ProcessType process, SimulationParams params);
+
+#endif
